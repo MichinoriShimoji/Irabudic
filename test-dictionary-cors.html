@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; background: linear-gradient(135deg, #3949ab 0%, #1a237e 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 950px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 30px; text-align: center; }
+        header h1 { font-size: 28px; margin-bottom: 8px; }
+        header p { opacity: 0.8; font-size: 14px; }
+        .search-section { padding: 20px 30px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+        .mode-toggle { display: flex; gap: 0; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 2px solid #3949ab; }
+        .mode-btn { flex: 1; padding: 10px 20px; border: none; background: white; cursor: pointer; font-size: 14px; font-weight: bold; color: #3949ab; transition: all 0.2s; }
+        .mode-btn:hover { background: #f0f0ff; }
+        .mode-btn.active { background: #3949ab; color: white; }
+        #searchInput { width: 100%; padding: 12px 16px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+        #searchInput:focus { outline: none; border-color: #3949ab; }
+        .search-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center; }
+        .search-options label { font-size: 12px; color: #6c757d; margin-right: 5px; }
+        .search-option { display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; padding: 4px 10px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6; }
+        .search-option:hover { background: #e9ecef; }
+        .search-option input { margin: 0; cursor: pointer; }
+        .search-option.active { background: #3949ab; color: white; border-color: #3949ab; }
+        .search-targets { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+        .search-target { font-size: 11px; padding: 3px 8px; background: #e9ecef; border-radius: 3px; cursor: pointer; }
+        .search-target:hover { background: #dee2e6; }
+        .search-target.active { background: #28a745; color: white; }
+        .alphabet-nav { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 15px; }
+        .alphabet-nav button { padding: 6px 10px; border: none; background: #e9ecef; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .alphabet-nav button:hover { background: #3949ab; color: white; }
+        .alphabet-nav button.active { background: #1a237e; color: white; }
+        .filter-section { display: flex; flex-wrap: wrap; gap: 8px; }
+        .filter-btn { padding: 6px 12px; border: none; background: #e9ecef; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .filter-btn:hover { background: #dee2e6; }
+        .filter-btn.active { background: #3949ab; color: white; }
+        .stats { padding: 10px 30px; background: #fff3cd; font-size: 13px; color: #856404; }
+        .dictionary-list { max-height: 60vh; overflow-y: auto; }
+        .entry { padding: 20px 30px; border-bottom: 1px solid #e9ecef; }
+        .entry:hover { background: #fafbfc; }
+        .entry-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .morph { font-size: 26px; font-weight: bold; color: #1a1a2e; }
+        .morph-index { font-size: 14px; color: #6c757d; vertical-align: super; }
+        .pos-badge { padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .gloss-main { font-size: 18px; color: #2d3436; }
+        .entry-header.reverse .gloss-main { font-size: 24px; font-weight: bold; color: #1a1a2e; order: -1; }
+        .entry-header.reverse .morph { font-size: 20px; color: #3949ab; }
+        .allomorphs { font-size: 13px; color: #6c757d; margin: 8px 0; padding: 6px 10px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #856404; }
+        .allomorphs::before { content: "異形態: "; font-weight: bold; color: #856404; }
+        .allomorph-item { display: inline-block; background: #e9ecef; padding: 2px 8px; border-radius: 3px; margin: 2px 3px 2px 0; font-family: monospace; font-size: 14px; }
+        .examples-section { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #dee2e6; }
+        .examples-title { font-size: 12px; font-weight: bold; color: #6c757d; margin-bottom: 8px; }
+        .example { margin-bottom: 12px; padding: 10px; background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); border-radius: 8px; font-size: 13px; }
+        .example-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .play-btn { width: 32px; height: 32px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3949ab 0%, #1a237e 100%); color: white; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .play-btn:hover { transform: scale(1.1); box-shadow: 0 3px 10px rgba(102,126,234,0.4); }
+        .play-btn.playing { background: #e74c3c; }
+        .example-text { font-size: 14px; color: #1a1a2e; line-height: 1.5; font-weight: 500; flex: 1; }
+        .example-trans { font-size: 13px; color: #2d3436; margin-bottom: 8px; padding: 6px 10px; background: #fff; border-radius: 4px; border-left: 3px solid #3949ab; }
+        .example-trans::before { content: "訳: "; font-weight: bold; color: #3949ab; }
+        .interlinear { display: flex; flex-wrap: wrap; gap: 2px; font-family: 'Consolas', 'Monaco', monospace; padding-top: 8px; border-top: 1px solid #dee2e6; }
+        .gloss-unit { display: flex; flex-direction: column; align-items: center; padding: 3px 5px; margin-right: 4px; border-radius: 3px; background: #fff; }
+        .gloss-unit.target { background: #fff3cd; border: 2px solid #ffc107; }
+        .gloss-unit .morph-text { font-size: 13px; color: #1a1a2e; font-weight: 500; }
+        .gloss-unit .gloss-text { font-size: 10px; color: #6c757d; }
+        .gloss-unit.target .morph-text { color: #856404; font-weight: bold; }
+        .gloss-unit.target .gloss-text { color: #856404; }
+        .pos-V { background: #cce5ff; color: #004085; } .pos-N { background: #d4edda; color: #155724; } .pos-AUX { background: #fff3cd; color: #856404; } .pos-ADJ { background: #f8d7da; color: #721c24; } .pos-ADV { background: #e2d5f1; color: #5a2d82; } .pos-PRN { background: #d1ecf1; color: #0c5460; } .pos-CONJ { background: #d4edda; color: #155724; } .pos-CP { background: #ffeaa7; color: #856404; } .pos-ISP { background: #dfe6e9; color: #2d3436; } .pos-SFP { background: #fab1a0; color: #6c3d00; } .pos-INTJ { background: #fd79a8; color: #6c1e3d; } .pos-VAFX { background: #74b9ff; color: #003366; } .pos-NAFX { background: #a29bfe; color: #2d1f5c; } .pos-FN { background: #81ecec; color: #006266; } .pos-PN { background: #ffeaa7; color: #6c5000; } .pos-NUM { background: #fdcb6e; color: #5a4000; } .pos-CJP { background: #00cec9; color: #006266; } .pos-LP { background: #a8e6cf; color: #1b5e20; } .pos-CLF { background: #b2bec3; color: #2d3436; } .pos-default { background: #e9ecef; color: #495057; }
+        .no-results { padding: 40px; text-align: center; color: #6c757d; }
+        footer { padding: 15px 30px; background: #f8f9fa; text-align: center; font-size: 12px; color: #6c757d; }
+        .highlight { background: #fff3cd; padding: 0 2px; border-radius: 2px; }
+        .csv-btn { padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: 10px; }
+        .csv-btn:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏝️ Test</h1>
+            <p>Sub</p>
+        </header>
+        <div class="search-section">
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="modeNormal">見出し順（宮古語→意味）</button>
+                <button class="mode-btn" id="modeReverse">逆引き（意味→宮古語）</button>
+            </div>
+            <input type="text" id="searchInput" placeholder="形態素・意味・品詞・和訳を検索...">
+            <div class="search-options">
+                <label>検索方法:</label>
+                <span class="search-option active" data-mode="partial">部分一致</span>
+                <span class="search-option" data-mode="exact">完全一致</span>
+                <span class="search-option" data-mode="prefix">前方一致</span>
+                <span class="search-option" data-mode="suffix">後方一致</span>
+                <div class="search-targets">
+                    <span class="search-target active" data-target="morph">形態素</span>
+                    <span class="search-target active" data-target="gloss">意味</span>
+                    <span class="search-target active" data-target="pos">品詞</span>
+                    <span class="search-target active" data-target="trans">和訳</span>
+                    <span class="search-target active" data-target="allo">異形態</span>
+                </div>
+            </div>
+            <div class="alphabet-nav" id="alphabetNav"></div>
+            <div class="filter-section" id="posFilters"></div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="dictionary-list" id="dictionaryList"></div>
+        <footer>Test | 総見出し語数: <span id="totalCount">0</span>語 | 🔊 例文をクリックで音声再生 <button class="csv-btn" onclick="downloadCSV()">📥 CSVダウンロード</button></footer>
+    </div>
+<script>
+const dictionaryData = [{"morph":"test","pos":"N","gloss":"テスト","allomorphs":[],"examples":[{"text":"test example","trans":"テスト例","morphs":["test"],"glosses":["テスト"],"audio_file":"https://zenodo.org/records/16753649/files/text_tamamiga.wav?download=1","start_time":0,"end_time":1,"target_index":0}]}];
+let currentFilter = null, currentLetter = null, searchQuery = '', reverseMode = false;
+let searchMode = 'partial';
+let searchTargets = { morph: true, gloss: true, pos: true, trans: true, allo: true };
+let audioElements = {}, currentlyPlaying = null, preloadQueue = [], isPreloading = false;
+
+// 音声を読み込み
+function loadAudio(url) {
+    if (!audioElements[url]) {
+        const audio = new Audio();
+        audio.crossOrigin = 'anonymous';
+        audio.preload = 'auto';
+        audioElements[url] = audio;
+    }
+    return audioElements[url];
+}
+
+// 音声を再生（CORSプロキシのフォールバック付き）
+async function playAudio(url, startTime, endTime, btn) {
+    // 前の再生を停止
+    if (currentlyPlaying) {
+        if (currentlyPlaying.audio) {
+            currentlyPlaying.audio.pause();
+        }
+        if (currentlyPlaying.button) {
+            currentlyPlaying.button.classList.remove('playing');
+            currentlyPlaying.button.textContent = '▶';
+        }
+    }
+    
+    // 同じボタンをクリックしたら停止
+    if (currentlyPlaying && currentlyPlaying.button === btn) {
+        currentlyPlaying = null;
+        return;
+    }
+    
+    btn.classList.add('playing');
+    btn.textContent = '⏳';
+    
+    const audio = loadAudio(url);
+    
+    // 再生終了時の処理
+    const checkEnd = () => {
+        if (audio.currentTime >= endTime) {
+            audio.pause();
+            btn.classList.remove('playing');
+            btn.textContent = '▶';
+            currentlyPlaying = null;
+        } else if (currentlyPlaying && currentlyPlaying.audio === audio) {
+            requestAnimationFrame(checkEnd);
+        }
+    };
+    
+    const startPlayback = () => {
+        audio.currentTime = startTime;
+        btn.textContent = '⏹';
+        currentlyPlaying = { audio, button: btn, endTime };
+        audio.play().then(() => requestAnimationFrame(checkEnd)).catch(err => {
+            console.error('Playback error:', err);
+            btn.classList.remove('playing');
+            btn.textContent = '❌';
+        });
+    };
+    
+    // URLを設定して再生を試みる
+    const tryPlay = async (finalUrl) => {
+        audio.src = finalUrl;
+        
+        return new Promise((resolve, reject) => {
+            audio.oncanplaythrough = () => {
+                startPlayback();
+                resolve();
+            };
+            audio.onerror = (e) => {
+                reject(e);
+            };
+            // タイムアウト
+            setTimeout(() => reject(new Error('Timeout')), 10000);
+        });
+    };
+    
+    try {
+        // まず直接URLで試す
+        await tryPlay(url);
+    } catch (err) {
+        console.log('Direct URL failed, trying CORS proxy...');
+        try {
+            // CORSプロキシを試す
+            await tryPlay('https://corsproxy.io/?' + encodeURIComponent(url));
+        } catch (err2) {
+            console.log('First proxy failed, trying alternative...');
+            try {
+                // 別のCORSプロキシを試す
+                await tryPlay('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+            } catch (err3) {
+                console.error('All playback attempts failed');
+                btn.classList.remove('playing');
+                btn.textContent = '❌';
+            }
+        }
+    }
+}
+
+// プリロード機能
+function preloadAllAudio() {
+    const urls = new Set();
+    for (const entry of dictionaryData) {
+        for (const ex of (entry.examples || [])) {
+            if (ex.audio_file) urls.add(ex.audio_file);
+        }
+    }
+    preloadQueue = [...urls];
+    preloadNext();
+}
+
+function preloadNext() {
+    if (preloadQueue.length === 0 || isPreloading) return;
+    isPreloading = true;
+    const url = preloadQueue.shift();
+    
+    if (!audioElements[url]) {
+        const audio = new Audio();
+        audio.crossOrigin = 'anonymous';
+        audio.preload = 'auto';
+        audioElements[url] = audio;
+        audio.oncanplaythrough = () => { isPreloading = false; preloadNext(); };
+        audio.onerror = () => { isPreloading = false; preloadNext(); };
+        audio.src = url;
+        setTimeout(() => { if (isPreloading) { isPreloading = false; preloadNext(); } }, 5000);
+    } else {
+        isPreloading = false;
+        preloadNext();
+    }
+}
+
+// ページ読み込み後にプリロード開始
+setTimeout(preloadAllAudio, 1000);
+
+const glossReading = {'上がる':'あがる','間':'あいだ','家':'いえ','行く':'いく','海':'うみ','お母さん':'おかあさん','落ちる':'おちる','沖縄':'おきなわ','顔':'かお','帰る':'かえる','買う':'かう','神':'かみ','髪':'かみ','来る':'くる','魚':'さかな','死ぬ':'しぬ','手':'て','時':'とき','友達':'ともだち','人':'ひと','船':'ふね','昔':'むかし','水':'みず','物':'もの','焼く':'やく','豆腐':'とうふ','食べる':'たべる','大きい':'おおきい','貧しい':'まずしい','豊かな':'ゆたかな'};
+const gojuonRows = [{label:'あ',chars:'あいうえおアイウエオ'},{label:'か',chars:'かきくけこがぎぐげごカキクケコガギグゲゴ'},{label:'さ',chars:'さしすせそざじずぜぞサシスセソザジズゼゾ'},{label:'た',chars:'たちつてとだぢづでどタチツテトダヂヅデド'},{label:'な',chars:'なにぬねのナニヌネノ'},{label:'は',chars:'はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ'},{label:'ま',chars:'まみむめもマミムメモ'},{label:'や',chars:'やゆよヤユヨ'},{label:'ら',chars:'らりるれろラリルレロ'},{label:'わ',chars:'わをんワヲン'},{label:'他',chars:''}];
+
+function getGojuonRow(str) { if (!str) return '他'; const r = glossReading[str], f = r ? r.charAt(0) : str.charAt(0); for (const row of gojuonRows) if (row.chars.includes(f)) return row.label; return '他'; }
+function getGojuonSortKey(str) { if (!str) return 'ん999'; if (glossReading[str]) return glossReading[str]; const first = str.charAt(0); if ((first >= 'ぁ' && first <= 'ん') || (first >= 'ァ' && first <= 'ン')) return str; return 'ん999' + str; }
+function getPosClass(pos) { const known = ['V','N','AUX','ADJ','ADV','PRN','CONJ','CP','ISP','SFP','INTJ','VAFX','NAFX','FN','PN','NUM','CLF','CJP','LP']; return known.includes(pos) ? 'pos-'+pos : 'pos-default'; }
+function highlightText(text, q) { 
+    if (!q || !text) return text || ''; 
+    try { 
+        const lower = text.toLowerCase();
+        const qLower = q.toLowerCase();
+        const idx = lower.indexOf(qLower);
+        if (idx === -1) return text;
+        return text.substring(0, idx) + '<span class="highlight">' + text.substring(idx, idx + q.length) + '</span>' + text.substring(idx + q.length);
+    } catch(e) { return text; } 
+}
+
+function renderExample(ex) {
+    const { morphs = [], glosses = [], trans, target_index, audio_file, start_time, end_time } = ex;
+    const safeAudioFile = audio_file ? audio_file.replace(/'/g, "\\'") : '';
+    let playBtn = (audio_file && start_time !== undefined) ? `<button class="play-btn" onclick="playAudio('${safeAudioFile}', ${start_time}, ${end_time}, this)">▶</button>` : '';
+    const transHtml = trans ? `<div class="example-trans">${trans}</div>` : '';
+    let interlinear = '';
+    for (let i = 0; i < morphs.length && i < glosses.length; i++) {
+        const m = morphs[i], g = glosses[i]; if (!m || m === 'XXX') continue;
+        interlinear += `<div class="gloss-unit ${i === target_index ? 'target' : ''}"><span class="morph-text">${m}</span><span class="gloss-text">${g || '?'}</span></div>`;
+    }
+    return `<div class="example"><div class="example-header">${playBtn}<div class="example-text">${ex.text}</div></div>${transHtml}<div class="interlinear">${interlinear}</div></div>`;
+}
+
+function renderEntry(item, q) {
+    const posClass = getPosClass(item.pos), indexHtml = item.morph_index ? `<span class="morph-index">${item.morph_index}</span>` : '';
+    const headerClass = reverseMode ? 'entry-header reverse' : 'entry-header';
+    const glossDisplay = reverseMode && item.glosses_all?.length > 1 ? item.glosses_all.join('、') : item.gloss;
+    let allomorphsHtml = item.allomorphs?.length ? `<div class="allomorphs">${item.allomorphs.map(a => `<span class="allomorph-item">${a}</span>`).join('')}</div>` : '';
+    let examplesHtml = '';
+    if (item.examples?.length) {
+        const tc = item.examples.filter(e => e.trans).length, ac = item.examples.filter(e => e.audio_file && e.start_time !== undefined).length;
+        examplesHtml = `<div class="examples-section"><div class="examples-title">📖 用例 ${item.examples.length}件${tc ? `（和訳${tc}件）` : ''}${ac ? ` 🔊${ac}件` : ''}</div>${item.examples.map(renderExample).join('')}</div>`;
+    }
+    return `<div class="entry"><div class="${headerClass}"><span class="morph">${highlightText(item.morph, q)}${indexHtml}</span><span class="pos-badge ${posClass}">${item.pos || '?'}</span><span class="gloss-main">${highlightText(glossDisplay, q)}</span></div>${allomorphsHtml}${examplesHtml}</div>`;
+}
+
+function getSortedData() {
+    if (reverseMode) {
+        const groups = new Map();
+        for (const item of dictionaryData) {
+            if (!groups.has(item.morph)) groups.set(item.morph, { morph: item.morph, glosses: [], pos: item.pos, allomorphs: new Set(), examples: [] });
+            const g = groups.get(item.morph), base = item.gloss?.split('.')[0] || '';
+            if (base && !g.glosses.includes(base)) g.glosses.push(base);
+            (item.allomorphs || []).forEach(a => g.allomorphs.add(a));
+            (item.examples || []).forEach(ex => { if (g.examples.length < 3 && !g.examples.some(e => e.text === ex.text)) g.examples.push(ex); });
+        }
+        return [...groups.values()].map(g => ({ morph: g.morph, gloss: g.glosses.sort((a, b) => getGojuonSortKey(a).localeCompare(getGojuonSortKey(b), 'ja'))[0] || '', glosses_all: g.glosses, pos: g.pos, allomorphs: [...g.allomorphs].sort(), examples: g.examples, morph_index: null })).sort((a, b) => getGojuonSortKey(a.gloss).localeCompare(getGojuonSortKey(b.gloss), 'ja'));
+    }
+    return [...dictionaryData].sort((a, b) => a.morph.toLowerCase().localeCompare(b.morph.toLowerCase()) || (a.pos || '').localeCompare(b.pos || ''));
+}
+
+function matchSearch(text, query, mode) {
+    if (!text || !query) return false;
+    const t = text.toLowerCase();
+    const q = query.toLowerCase();
+    switch(mode) {
+        case 'exact': return t === q;
+        case 'prefix': return t.startsWith(q);
+        case 'suffix': return t.endsWith(q);
+        default: return t.includes(q);
+    }
+}
+
+function filterData() {
+    return getSortedData().filter(item => {
+        if (currentLetter) { 
+            if (reverseMode) { 
+                if (getGojuonRow(item.gloss) !== currentLetter) return false; 
+            } else { 
+                if (item.morph.charAt(0).toLowerCase() !== currentLetter.toLowerCase()) return false; 
+            } 
+        }
+        if (currentFilter && item.pos !== currentFilter) return false;
+        if (searchQuery) {
+            let match = false;
+            if (searchTargets.morph && matchSearch(item.morph, searchQuery, searchMode)) match = true;
+            if (!match && searchTargets.gloss) {
+                if (reverseMode && item.glosses_all) {
+                    if (item.glosses_all.some(g => matchSearch(g, searchQuery, searchMode))) match = true;
+                } else if (matchSearch(item.gloss, searchQuery, searchMode)) match = true;
+            }
+            if (!match && searchTargets.pos && matchSearch(item.pos, searchQuery, searchMode)) match = true;
+            if (!match && searchTargets.allo && item.allomorphs?.some(a => matchSearch(a, searchQuery, searchMode))) match = true;
+            if (!match && searchTargets.trans && item.examples?.some(ex => matchSearch(ex.trans, searchQuery, searchMode))) match = true;
+            if (!match) return false;
+        }
+        return true;
+    });
+}
+
+function render() {
+    const list = document.getElementById('dictionaryList'), stats = document.getElementById('stats');
+    const filtered = filterData();
+    list.innerHTML = filtered.length === 0 ? '<div class="no-results">該当する語が見つかりません</div>' : filtered.map(item => renderEntry(item, searchQuery)).join('');
+    const exCount = filtered.reduce((s, i) => s + (i.examples?.length || 0), 0), transCount = filtered.reduce((s, i) => s + (i.examples?.filter(e => e.trans).length || 0), 0), audioCount = filtered.reduce((s, i) => s + (i.examples?.filter(e => e.audio_file && e.start_time !== undefined).length || 0), 0);
+    stats.textContent = `${reverseMode ? '【逆引き】' : '【見出し順】'} 表示: ${filtered.length}語（用例: ${exCount}件、和訳: ${transCount}件、音声: ${audioCount}件）`;
+}
+
+function initAlphabetNav() {
+    const nav = document.getElementById('alphabetNav'); nav.innerHTML = '';
+    const allBtn = document.createElement('button'); allBtn.textContent = '全て'; allBtn.className = 'active';
+    allBtn.onclick = () => { currentLetter = null; nav.querySelectorAll('button').forEach(b => b.classList.remove('active')); allBtn.classList.add('active'); render(); };
+    nav.appendChild(allBtn);
+    if (reverseMode) {
+        const used = new Set(dictionaryData.map(d => getGojuonRow(d.gloss)));
+        gojuonRows.forEach(row => { if (used.has(row.label)) { const btn = document.createElement('button'); btn.textContent = row.label + '行'; btn.onclick = () => { currentLetter = row.label; nav.querySelectorAll('button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }; nav.appendChild(btn); } });
+    } else {
+        [...new Set(dictionaryData.map(d => d.morph.charAt(0).toLowerCase()))].sort().forEach(letter => { const btn = document.createElement('button'); btn.textContent = letter.toUpperCase(); btn.onclick = () => { currentLetter = letter; nav.querySelectorAll('button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }; nav.appendChild(btn); });
+    }
+}
+
+function initPosFilters() {
+    const allPos = new Set(dictionaryData.map(d => d.pos).filter(Boolean)), filters = document.getElementById('posFilters'); filters.innerHTML = '';
+    const allBtn = document.createElement('button'); allBtn.className = 'filter-btn active'; allBtn.textContent = '全品詞';
+    allBtn.onclick = () => { currentFilter = null; filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); allBtn.classList.add('active'); render(); };
+    filters.appendChild(allBtn);
+    ['V','N','ADJ','ADV','AUX','PRN','CP','ISP','SFP','INTJ','CONJ','VAFX','NAFX','FN','PN','CJP','LP'].forEach(pos => { if (allPos.has(pos)) { const btn = document.createElement('button'); btn.className = 'filter-btn'; btn.textContent = pos; btn.onclick = () => { currentFilter = pos; filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }; filters.appendChild(btn); } });
+}
+
+document.getElementById('modeNormal').onclick = () => { reverseMode = false; document.getElementById('modeNormal').classList.add('active'); document.getElementById('modeReverse').classList.remove('active'); currentLetter = null; initAlphabetNav(); render(); };
+document.getElementById('modeReverse').onclick = () => { reverseMode = true; document.getElementById('modeReverse').classList.add('active'); document.getElementById('modeNormal').classList.remove('active'); currentLetter = null; initAlphabetNav(); render(); };
+document.getElementById('searchInput').oninput = (e) => { searchQuery = e.target.value; render(); };
+
+// 検索モード切替
+document.querySelectorAll('.search-option').forEach(function(opt) {
+    opt.onclick = function() {
+        document.querySelectorAll('.search-option').forEach(function(o) { o.classList.remove('active'); });
+        opt.classList.add('active');
+        searchMode = opt.dataset.mode;
+        if (searchQuery) render();
+    };
+});
+
+// 検索対象切替
+document.querySelectorAll('.search-target').forEach(function(tgt) {
+    tgt.onclick = function() {
+        tgt.classList.toggle('active');
+        searchTargets[tgt.dataset.target] = tgt.classList.contains('active');
+        if (searchQuery) render();
+    };
+});
+
+document.getElementById('totalCount').textContent = dictionaryData.length;
+initAlphabetNav(); initPosFilters(); render();
+
+function downloadCSV() {
+    const escapeCSV = (str) => {
+        if (!str) return '';
+        str = String(str);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    };
+    
+    // ヘッダー
+    const headers = ['morph', 'pos', 'gloss', 'allomorphs', 'morph_index', 'ex_text', 'ex_trans', 'ex_morphs', 'ex_glosses', 'ex_audio', 'ex_start', 'ex_end', 'ex_target'];
+    let csv = headers.join(',') + '\n';
+    
+    for (const entry of dictionaryData) {
+        const base = [
+            escapeCSV(entry.morph),
+            escapeCSV(entry.pos),
+            escapeCSV(entry.gloss),
+            escapeCSV((entry.allomorphs || []).join('|')),
+            escapeCSV(entry.morph_index || '')
+        ];
+        
+        if (entry.examples && entry.examples.length > 0) {
+            for (const ex of entry.examples) {
+                const row = [
+                    ...base,
+                    escapeCSV(ex.text),
+                    escapeCSV(ex.trans),
+                    escapeCSV((ex.morphs || []).join('|')),
+                    escapeCSV((ex.glosses || []).join('|')),
+                    escapeCSV(ex.audio_file),
+                    escapeCSV(ex.start_time),
+                    escapeCSV(ex.end_time),
+                    escapeCSV(ex.target_index)
+                ];
+                csv += row.join(',') + '\n';
+            }
+        } else {
+            csv += base.join(',') + ',,,,,,,,' + '\n';
+        }
+    }
+    
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dictionary.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
